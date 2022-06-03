@@ -4,7 +4,7 @@ from parsers import literal
 register = (pp.Char("A") | pp.Char("B"))("register")
 variable = pp.Word(pp.alphas + "_")("variable")
 memory = ("(" + (register | literal.parser | variable) + ")")("memory")
-label = pp.Word(pp.alphas + "_")("label")
+label = pp.Word(pp.alphanums + "_")("label")
 
 operands_with_label = literal.parser | memory | register | label
 operands_with_variable = literal.parser | memory | register | variable
@@ -40,7 +40,7 @@ NOT = ((pp.Literal("NOT"))("instruction") + (double_operand | single_operand))("
 SHL = ((pp.Literal("SHL"))("instruction") + (double_operand | single_operand))("shl")
 SHR = ((pp.Literal("SHR"))("instruction") + (double_operand | single_operand))("shr")
 INC = ((pp.Literal("INC"))("instruction") + single_operand)("inc")
-DEC = ((pp.Literal("DEC"))("instruction") + single_operand)("dec")
+DEC = ((pp.Literal("DEC"))("instruction") + single_operand)("decr")
 CMP = ((pp.Literal("CMP"))("instruction") + double_operand)("cmp")
 NOP = (pp.Literal("NOP")("instruction"))("nop")
 PUSH = ((pp.Literal("PUSH"))("instruction") + single_operand)("_push")

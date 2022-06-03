@@ -1,6 +1,6 @@
 import pyparsing as pp
 
-parser = (pp.Word(pp.alphas + "_")("label") + pp.Word(":").suppress())(
+parser = (pp.Word(pp.alphanums + "_")("label") + pp.Word(":").suppress())(
     "label_definition"
 )
 

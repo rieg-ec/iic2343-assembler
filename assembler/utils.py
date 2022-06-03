@@ -46,7 +46,7 @@ def clean_file_content(data: str) -> str:
 
 
 def parse_asm(filename, only_instructions=False):
-    with open(filename) as file:
+    with open(filename, encoding="latin-1") as file:
         file_data = clean_file_content(file.read())
 
         ram = []
@@ -96,6 +96,8 @@ def parse_asm(filename, only_instructions=False):
 def convert_asm_to_bin(rom: List[AsmInstruction]) -> List[str]:
     instructions = []
     for asm in rom:
+        if asm.parsed_line.ret or asm.parsed_line._pop:
+            instructions.append("0" * 16 + "00000000000000010000")
         instruction = get_instruction_in_bits(asm)
         instructions.append(instruction)
 
@@ -126,17 +128,25 @@ def get_instruction_in_bits(asm: AsmInstruction) -> str:
 
 
 def pre_PC(asm):
-    return "1" if asm.parsed_line.jmp or asm.parsed_line.call else "0"
+    pl = asm.parsed_line
+
+    return "1" if pl.jmp or pl.call or pl.ret else "0"
 
 
 def load_A(asm):
     pl = asm.parsed_line
+
+    if pl.cmp or pl._push:
+        return "0"
 
     return "1" if pl.register and pl.operand_left.as_list() == ["A"] else "0"
 
 
 def load_B(asm):
     pl = asm.parsed_line
+
+    if pl.cmp or pl._push:
+        return "0"
 
     return "1" if pl.register and pl.operand_left.as_list() == ["B"] else "0"
 
@@ -159,11 +169,17 @@ def sel_A(asm):
             return "00"
         return "11"
 
+    if pl._pop:
+        return "11"
+
     return "00"
 
 
-def sel_B(asm) -> str:
+def sel_B(asm):
     pl = asm.parsed_line
+
+    if pl.jmp or pl.call:
+        return "00"
 
     if (
         pl.operand_right
@@ -186,13 +202,16 @@ def sel_B(asm) -> str:
         if pl.operand_left.as_list() == ["A"] and pl.operand_right.as_list() == ["B"]:
             return "00"
 
-    if not pl.operand_right and pl.memory:
-        return "10"
-
-    if not pl.operand_right and pl.literal:
+    if (pl.inc or pl.decr) and pl.operand_left.as_list() == ["A"]:
         return "01"
 
-    if (pl.inc or pl.dec) and pl.operand_left.as_list() == ["A"]:
+    if (pl.inc or pl.decr) and pl.memory:
+        return "10"
+
+    if not pl.operand_right and pl.memory:
+        return "00"
+
+    if not pl.operand_right and pl.literal:
         return "01"
 
     if pl._push and pl.operand_left.as_list() == ["A"]:
@@ -201,13 +220,16 @@ def sel_B(asm) -> str:
     if pl.mov and pl.operand_right.as_list() == ["A"]:
         return "11"
 
+    if pl._pop:
+        return "10"
+
     return "00"
 
 
 def sel_ALU(asm):
     pl = asm.parsed_line
 
-    if pl.sub:
+    if pl.sub or pl.decr or pl.cmp:
         return "001"
 
     if pl._and:
@@ -234,7 +256,7 @@ def sel_ALU(asm):
 def sel_add(asm):
     pl = asm.parsed_line
 
-    if pl._push or pl.call:
+    if pl._push or pl.call or pl.ret or pl._pop:
         return "10"
 
     if pl.memory and pl.memory[1] == "B":
@@ -248,20 +270,24 @@ def sel_din(asm):
 
 
 def sel_PC(asm):
-    return "0"
+    return "1" if asm.parsed_line.ret else "0"
 
 
 def w(asm):
     pl = asm.parsed_line
 
-    if pl.memory and pl.operand_left.as_list() == pl.memory.as_list():
+    if (
+        pl._push
+        or pl.call
+        or (pl.memory and pl.operand_left.as_list() == pl.memory.as_list())
+    ):
         return "1"
 
     return "0"
 
 
 def inc_SP(asm):
-    return "1" if asm.parsed_line.call or asm.parsed_line._pop else "0"
+    return "0"
 
 
 def dec_SP(asm):
@@ -270,9 +296,6 @@ def dec_SP(asm):
 
 def load_PC(asm):
     pl = asm.parsed_line
-
-    if not pl.jmp:
-        return "000"
 
     if pl.jeq:
         return "001"
@@ -284,6 +307,8 @@ def load_PC(asm):
         return "100"
     elif pl.jlt:
         return "101"
+    elif pl.jle:
+        return "110"
     elif pl.jcr:
         return "111"
     else:

@@ -47,5 +47,64 @@ if __name__ == "__main__":
     os.remove("tmp.asm")
 
     instructions_in_bits = convert_asm_to_bin(rom)
+
     for instruction in instructions_in_bits:
         print(instruction)
+
+    exit(0)
+
+    empty_ram_lines = 4096 - len(instructions_in_bits)
+    bits = ",\n".join(
+        f'"{i}"' for i in instructions_in_bits + ["0" * 36] * empty_ram_lines
+    )
+
+    print(
+        """
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.STD_LOGIC_UNSIGNED.ALL;
+USE IEEE.NUMERIC_STD.ALL;
+
+entity ROM is
+    Port (
+        clk       : in  std_logic;
+        write     : in  std_logic;
+        disable   : in  std_logic;
+        address   : in  std_logic_vector(11 downto 0);
+        datain    : in  std_logic_vector(35 downto 0);
+        dataout   : out std_logic_vector(35 downto 0)
+          );
+end ROM;
+
+architecture Behavioral of ROM is
+
+type memory_array is array (0 to ((2 ** 12) - 1) ) of std_logic_vector (35 downto 0);
+
+signal memory : memory_array:= (
+    """
+    )
+
+    print(bits)
+
+    print(
+        """
+);
+
+begin
+
+process (clk)
+    begin
+       if (rising_edge(clk)) then
+            if(write = '1') then
+                memory(to_integer(unsigned(address))) <= datain;
+            end if;
+       end if;
+end process;
+
+with disable select
+    dataout <= memory(to_integer(unsigned(address)))  when '0',
+            (others => '0') when others;
+
+end Behavioral;
+"""
+    )
