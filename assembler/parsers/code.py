@@ -28,7 +28,7 @@ JMP = (
         | pp.Literal("JLE")("jle")
         | pp.Literal("JCR")("jcr")
     )("instruction")
-    + (label("label") | literal.parser)
+    + (literal.parser | label("label"))
 )("jmp")
 MOV = ((pp.Literal("MOV"))("instruction") + double_operand)("mov")
 ADD = ((pp.Literal("ADD"))("instruction") + (double_operand | single_operand))("add")

@@ -48,11 +48,6 @@ if __name__ == "__main__":
 
     instructions_in_bits = convert_asm_to_bin(rom)
 
-    for instruction in instructions_in_bits:
-        print(instruction)
-
-    exit(0)
-
     empty_ram_lines = 4096 - len(instructions_in_bits)
     bits = ",\n".join(
         f'"{i}"' for i in instructions_in_bits + ["0" * 36] * empty_ram_lines
