@@ -162,7 +162,7 @@ def sel_A(asm):
     if pl.inc:
         if pl.register == "A":
             return "00"
-        return "10"
+        return "01"
 
     if pl._push:
         if pl.register == "A":
