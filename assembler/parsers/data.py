@@ -1,8 +1,10 @@
 import pyparsing as pp
 
-from parsers import literal
+from parsers import literal, char, string
 
-parser = pp.Group(pp.Word(pp.alphanums + "_")("name") + literal.parser)("variable")
+parser = pp.Group(
+    pp.Word(pp.alphanums + "_")("name") + (char.parser | string.parser | literal.parser)
+)("variable")
 
 parser.ignore(pp.Literal("JMP"))
 parser.ignore(pp.Literal("JEQ"))

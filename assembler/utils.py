@@ -1,6 +1,6 @@
 from typing import Tuple, List
 import pyparsing as pp
-from parsers import code, data, label, array_item
+from parsers import code, data, label, array_item, char
 
 
 class AsmInstruction:

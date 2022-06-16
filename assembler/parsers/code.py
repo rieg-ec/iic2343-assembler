@@ -1,5 +1,5 @@
 import pyparsing as pp
-from parsers import literal
+from parsers import literal, char
 
 register = (pp.Char("A") | pp.Char("B"))("register")
 variable = pp.Word(pp.alphanums + "_")("variable")

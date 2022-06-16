@@ -14,19 +14,40 @@ if __name__ == "__main__":
     ram, rom = parse_asm(filename)
 
     with open("tmp.asm", "w") as file:
-        for (index, line) in enumerate(ram):
+        ram_dir = 0
+        for line in ram:
             # create instructions to move variables to ram
             try:
-                literal = "".join(line.parsed_line.variable.literal)
+                if line.parsed_line.variable.literal:
+                    literal = line.parsed_line.variable.literal
+                elif line.parsed_line.variable.char:
+                    literal = str(ord(line.parsed_line.variable.char))
+                elif line.parsed_line.variable.string:
+                    string = line.parsed_line.variable.string
+                    for char in string:
+                        instructions = move_data_to_ram(str(ord(char)), ram_dir)
+                        for instruction in instructions:
+                            file.write(instruction + "\n")
+                        ram_dir += 1
+
+                    string_end_instruction = move_data_to_ram("0", ram_dir)
+                    for instruction in string_end_instruction:
+                        file.write(instruction + "\n")
+                    ram_dir += 1
+
+                    continue
             except AttributeError:
                 literal = line.parsed_line[0]
 
-            instructions = move_data_to_ram(literal, index)
+            instructions = move_data_to_ram("".join(literal), ram_dir)
             for instruction in instructions:
                 file.write(instruction + "\n")
 
+            ram_dir += 1
+
         for line in rom:
             base = len(ram) * 2
+
             if not line.parsed_line.label_definition:
                 pl = line.parsed_line
 
