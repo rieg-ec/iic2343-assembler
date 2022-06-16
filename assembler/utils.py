@@ -105,7 +105,11 @@ def convert_asm_to_bin(rom: List[AsmInstruction]) -> List[str]:
 
 
 def get_instruction_in_bits(asm: AsmInstruction) -> str:
-    if asm.parsed_line.literal:
+    pl = asm.parsed_line
+
+    if (pl.inc or pl.decr) and pl.operand_left.as_list() == ["A"]:
+        op = "0" * 15 + "1"
+    elif pl.literal:
         op = literal_to_padded_bits(asm)
     else:
         op = "0" * 16
