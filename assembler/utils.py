@@ -3,6 +3,9 @@ import pyparsing as pp
 from parsers import code, data, label, array_item, char
 
 
+RAM_RESERVED_SLOTS = 8
+
+
 class AsmInstruction:
     def __init__(self, raw_line, parsed_line, rom_dir=None) -> None:
         self.raw_line: str = raw_line
@@ -27,13 +30,13 @@ def find_label_rom_address(label: str, rom: List[AsmInstruction]) -> int:
 def find_variable_ram_address(name: str, ram: List[AsmInstruction]) -> int:
     for (index, line) in enumerate(ram):
         if line.parsed_line.variable.name == name:
-            return index
+            return index + RAM_RESERVED_SLOTS
 
     raise Exception(f"Variable {name} not in ram")
 
 
 def move_data_to_ram(value: str, memory_dir: int) -> Tuple[str, str]:
-    return (f"MOV A, {value}", f"MOV ({memory_dir}), A")
+    return (f"MOV A, {value}", f"MOV ({memory_dir + RAM_RESERVED_SLOTS}), A")
 
 
 def clean_file_content(data: str) -> str:
